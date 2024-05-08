@@ -17,7 +17,7 @@ export default function Home() {
   return (
     <div className="relative">
     <nav className="fixed top-0 left-0 right-0 py-4 border-b-2 border-gray-400">
-      <h1 className="text-6xl text-center">Sherlock AI</h1>
+      <h1 className="text-6xl text-center select-none">Sherlock AI</h1>
     </nav>
 
     { messages.length > 0 ? (
@@ -30,7 +30,7 @@ export default function Home() {
       </div>
     ) : (
       <div className="flex flex-grow justify-center items-center h-[100vh]">
-        <p className="text-center text-3xl">Ask me a question to get started.</p>
+        <p className="text-center text-3xl select-none">Ask me a question to get started.</p>
       </div>
     ) }
     
@@ -38,7 +38,7 @@ export default function Home() {
       <input
         type="text"
         placeholder="Ask me something..."
-        className="input input-bordered w-full max-w-xl focus:outline-none"
+        className="input input-bordered w-full max-w-sm sm:max-w-xl focus:outline-none"
         value={userInput}
         onChange={e => setUserInput(e.target.value)}
         onKeyDown={e => { e.code === 'Enter' && handleSendMessage() }}
