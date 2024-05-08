@@ -1,21 +1,35 @@
 'use client'
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import axios from 'axios'
 
 export default function Home() {
 
   const [userInput, setUserInput] = useState('')
   const [messages, setMessages] = useState<IMessage[]>([])
+  const [threadId, setThreadId] = useState('')
+  const [loading, setLoading] = useState(true)
 
   const handleSendMessage = async () => {
     if (userInput.trim().length > 0 ) {
       const response = await axios.post('/assistant', { threadId: '123' })
-      console.log(response)
+      const threadId = response.data.threadId
+      localStorage.setItem('threadId', threadId)
+      const messagesToSave = JSON.stringify([...messages, { role: 'user', content: userInput }])
+      localStorage.setItem('messages', messagesToSave)
       setMessages(prev => [...prev, { role: 'user', content: userInput }])
       setUserInput('')
     }
   }
+
+  useEffect(() => {
+    const threadId = localStorage.getItem('threadId')
+    threadId && setThreadId(threadId)
+
+    const messages = localStorage.getItem('messages')
+    messages && setMessages(JSON.parse(messages))
+    setLoading(false)
+  }, [])
 
   return (
     <div className="relative">
@@ -33,7 +47,7 @@ export default function Home() {
       </div>
     ) : (
       <div className="flex flex-grow justify-center items-center h-[100vh]">
-        <p className="text-center text-3xl select-none">Ask a question to get started.</p>
+        { loading ? <span className="loading loading-dots loading-lg"></span> : <p className="text-center text-3xl select-none">Ask a question to get started.</p> }
       </div>
     ) }
     
