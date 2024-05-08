@@ -1,6 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from "react"
+import { AvatarImage, AvatarFallback, Avatar } from "@/components/ui/avatar"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import axios from 'axios'
 
 export default function Home() {
@@ -37,35 +40,66 @@ export default function Home() {
   }, [messages])
 
   return (
-    <div className="relative">
-    <nav className="fixed top-0 left-0 right-0 py-4 border-b-2 border-gray-400">
-      <h1 className="text-6xl text-center select-none">Sherlock AI</h1>
-    </nav>
-
-    { messages.length > 0 ? (
-      <div className="mt-28">
-      { messages.map(({ role, content }, index) => (
-        <div key={index} ref={index === messages.length - 1 ? lastMessageRef : null} className={ role === 'user' ? "chat chat-end" : "chat chat-start"}>
-          <p className={ role === 'user' ? "chat-bubble" : "chat-bubble chat-bubble-info"}>{content}</p>
+    <div className="flex flex-col h-screen">
+      
+      <header className="bg-gray-900 text-white py-4 px-6 flex items-center">
+        <div className="flex items-center">
+          <span className="text-lg font-medium">Sherlock AI</span>
         </div>
-      )) }
+      </header>
+
+      <div className="flex-1 bg-gray-100 p-6 overflow-y-auto">
+        <div className="space-y-4">
+
+        { messages.length > 0 ? (
+          <>
+          { messages.map(({ role, content }, index) => (
+            <>
+            { role === 'user' ? (
+              <div key={index} ref={index === messages.length - 1 ? lastMessageRef : null} className="flex items-start justify-end">
+                <div className="mr-3 bg-blue-500 text-white rounded-lg p-4 max-w-[70%]">
+                  <p>{content}</p>
+                </div>
+                <Avatar>
+                  <AvatarImage alt="Me" src="/placeholder-avatar.jpg" />
+                  <AvatarFallback>ME</AvatarFallback>
+                </Avatar>
+              </div>
+            ) : (
+              <div key={index} ref={index === messages.length - 1 ? lastMessageRef : null} className="flex items-start">
+                <Avatar>
+                  <AvatarImage alt="Sherlock AI" src="/placeholder-avatar.jpg" />
+                  <AvatarFallback>SA</AvatarFallback>
+                </Avatar>
+                <div className="ml-3 bg-white rounded-lg p-4 max-w-[70%]">
+                  <p className="text-gray-800">{content}</p>
+                </div>
+              </div>
+            ) }
+            </>
+          )) }
+          </>
+        ) : (
+          <div className="flex flex-grow justify-center items-center h-[75vh]">
+            { loading ? <span className="loading loading-dots loading-lg"></span> : <p className="text-center text-3xl select-none">Hello, I&apos;m Sherlock AI. How can I help you today?</p> }
+          </div>
+        ) }
+
+        </div>
       </div>
-    ) : (
-      <div className="flex flex-grow justify-center items-center h-[100vh]">
-        { loading ? <span className="loading loading-dots loading-lg"></span> : <p className="text-center text-3xl select-none">Ask a question to get started.</p> }
+
+      <div className="bg-gray-100 p-4 flex items-center">
+        <Input
+          type="text"
+          placeholder="Ask me something..."
+          className="flex-1 mr-4 bg-white border-none focus:ring-0"
+          value={userInput}
+          onChange={e => setUserInput(e.target.value)}
+          onKeyDown={e => { e.code === 'Enter' && handleSendMessage() }}
+        />
+        <Button>Send</Button>
       </div>
-    ) }
-    
-    <footer className="fixed bottom-0 left-0 right-0 py-4 flex justify-center">
-      <input
-        type="text"
-        placeholder="Ask me something..."
-        className="input input-bordered w-full max-w-sm sm:max-w-xl focus:outline-none"
-        value={userInput}
-        onChange={e => setUserInput(e.target.value)}
-        onKeyDown={e => { e.code === 'Enter' && handleSendMessage() }}
-      />
-    </footer>
+
     </div>
   )
 }

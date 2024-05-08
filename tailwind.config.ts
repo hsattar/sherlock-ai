@@ -8,10 +8,7 @@ const config: Config = {
   ],
   theme: {},
   plugins: [
-    require('daisyui')
-  ],
-  daisyui: {
-    themes: ["light", "dark"],
-  }
+    require("tailwindcss-animate")
+  ]
 };
 export default config;
