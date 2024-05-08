@@ -14,3 +14,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ threadId: '456' })
 }
+
+export async function GET(req: Request) {
+    return Response.json({ threadId: '456' })
+}
