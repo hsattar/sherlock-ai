@@ -57,7 +57,7 @@ export default function Home() {
             <>
             { role === 'user' ? (
               <div key={index} ref={index === messages.length - 1 ? lastMessageRef : null} className="flex items-start justify-end">
-                <div className="mr-3 bg-blue-500 text-white rounded-lg p-4 max-w-[70%]">
+                <div className="mr-3 bg-blue-500 text-white rounded-md p-4 max-w-[70%]">
                   <p>{content}</p>
                 </div>
                 <Avatar>
@@ -71,7 +71,7 @@ export default function Home() {
                   <AvatarImage alt="Sherlock AI" src="/placeholder-avatar.jpg" />
                   <AvatarFallback>SA</AvatarFallback>
                 </Avatar>
-                <div className="ml-3 bg-white rounded-lg p-4 max-w-[70%]">
+                <div className="ml-3 bg-white rounded-md p-4 max-w-[70%]">
                   <p className="text-gray-800">{content}</p>
                 </div>
               </div>
@@ -80,7 +80,7 @@ export default function Home() {
           )) }
           </>
         ) : (
-          <div className="flex flex-grow justify-center items-center h-[75vh]">
+          <div className="flex flex-grow justify-center items-center h-[75vh] lg:h-[80vh]">
             { loading ? <span className="loading loading-dots loading-lg"></span> : <p className="text-center text-3xl select-none">Hello, I&apos;m Sherlock AI. How can I help you today?</p> }
           </div>
         ) }
@@ -95,9 +95,9 @@ export default function Home() {
           className="flex-1 mr-4 bg-white border-none focus:ring-0"
           value={userInput}
           onChange={e => setUserInput(e.target.value)}
-          onKeyDown={e => { e.code === 'Enter' && handleSendMessage() }}
+          onKeyDown={e => { e.key === 'Enter' && handleSendMessage() }}
         />
-        <Button>Send</Button>
+        <Button onClick={handleSendMessage}>Send</Button>
       </div>
 
     </div>
