@@ -1,14 +1,17 @@
 'use client'
 
 import { useState } from "react"
+import axios from 'axios'
 
 export default function Home() {
 
   const [userInput, setUserInput] = useState('')
   const [messages, setMessages] = useState<IMessage[]>([])
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (userInput.trim().length > 0 ) {
+      const response = await axios.post('/assistant', { threadId: '123' })
+      console.log(response)
       setMessages(prev => [...prev, { role: 'user', content: userInput }])
       setUserInput('')
     }
@@ -30,7 +33,7 @@ export default function Home() {
       </div>
     ) : (
       <div className="flex flex-grow justify-center items-center h-[100vh]">
-        <p className="text-center text-3xl select-none">Ask me a question to get started.</p>
+        <p className="text-center text-3xl select-none">Ask a question to get started.</p>
       </div>
     ) }
     
