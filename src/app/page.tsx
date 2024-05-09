@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from "react"
+import { FormEvent, useEffect, useRef, useState } from "react"
 import { AvatarImage, AvatarFallback, Avatar } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -14,9 +14,10 @@ export default function Home() {
   const [threadId, setThreadId] = useState('')
   const [loading, setLoading] = useState(true)
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (e: FormEvent) => {
+    e.preventDefault()
     if (userInput.trim().length > 0 ) {
-      const response = await axios.post('/assistant', { threadId })
+      const response = await axios.post('/api/assistant', { threadId })
       const threadIdGenerated = response.data.threadId
       localStorage.setItem('threadId', threadIdGenerated)
       const messagesToSave = JSON.stringify([...messages, { role: 'user', content: userInput }])
@@ -86,17 +87,16 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="bg-gray-100 p-4 flex items-center">
+      <form onSubmit={handleSendMessage} className="bg-gray-100 p-4 flex items-center">
         <Input
           type="text"
           placeholder="Ask me something..."
           className="flex-1 mr-4 bg-white border-none focus:ring-0"
           value={userInput}
           onChange={e => setUserInput(e.target.value)}
-          onKeyDown={e => { e.key === 'Enter' && handleSendMessage() }}
         />
-        <Button onClick={handleSendMessage}>Send</Button>
-      </div>
+        <Button type="submit">Send</Button>
+      </form>
 
     </div>
   )
