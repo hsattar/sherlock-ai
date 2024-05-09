@@ -1,14 +1,18 @@
 'use client'
 
 import { FormEvent, useEffect, useRef, useState } from "react"
+import regeneratorRuntime from "regenerator-runtime"
 import { AvatarFallback, Avatar } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import axios from 'axios'
 import ReactLoading from 'react-loading'
 import ReactMarkdown from 'react-markdown'
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
 
 export default function Home() {
+
+  const { transcript, listening, browserSupportsSpeechRecognition } = useSpeechRecognition()
 
   const lastMessageRef = useRef<HTMLDivElement>(null)
   const [userInput, setUserInput] = useState('')
@@ -17,7 +21,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [responseLoading, setResponseLoading] = useState(false)
 
-  const handleSendMessage = async (e: FormEvent) => {
+  const handleSendMessage = async (e: FormEvent ) => {
     e.preventDefault()
     if (userInput.trim().length > 0 ) {
 
@@ -53,6 +57,41 @@ export default function Home() {
     }
   }
 
+  const handleVoiceMessage = async (message: string) => {
+    SpeechRecognition.stopListening()
+    if (message.trim().length > 0 ) {
+
+      setMessages(prev => [...prev, { role: 'user', content: message }])
+      setResponseLoading(true)
+
+      const response = await axios.post('/api/assistant', { threadId, message: { role: 'user', content: message.trim() } })
+      const threadIdGenerated = response.data.threadId
+      setThreadId(threadIdGenerated)
+    
+      localStorage.setItem('threadId', threadIdGenerated)
+      const messagesToSave = JSON.stringify([...messages, { role: 'user', content: message }])
+      localStorage.setItem('messages', messagesToSave)
+
+
+      const intervalId = setInterval(async (): Promise<any> => {
+
+        const threadResponse = await axios.post(`/api/assistant-status`, { threadId: response?.data.threadId, runId: response?.data.runId })
+
+        if (threadResponse?.status === 200) {
+            clearInterval(intervalId)
+            const answer: string = await threadResponse?.data.assistantResponse.text.value
+            setResponseLoading(false)
+            setMessages(prev => [...prev, { role: 'assistant', content: answer }])
+
+            const messagesToSave = JSON.stringify([...messages, { role: 'user', content: message }, { role: 'assistant', content: answer }])
+            localStorage.setItem('messages', messagesToSave)
+        }
+
+      }, 2000)
+    
+    }
+  }
+
   useEffect(() => {
     const threadId = localStorage.getItem('threadId')
     threadId && setThreadId(threadId)
@@ -79,10 +118,10 @@ export default function Home() {
         { messages.length > 0 ? (
           <>
           { messages.map(({ role, content }, index) => (
-            <>
+            <div key={index}>
             { role === 'user' ? (
-              <div key={index} ref={index === messages.length - 1 ? lastMessageRef : null} className="flex items-start justify-end">
-                <div className="mr-3 bg-blue-500 text-white rounded-md p-4 max-w-[70%]">
+              <div ref={index === messages.length - 1 ? lastMessageRef : null} className="flex items-start justify-end">
+                <div className="mr-3 bg-blue-500 text-white rounded-md p-4 max-w-[95%] md:max-w-[70%]">
                   <ReactMarkdown>{content}</ReactMarkdown>
                 </div>
                 <Avatar>
@@ -91,17 +130,17 @@ export default function Home() {
                 </Avatar>
               </div>
             ) : (
-              <div key={index} ref={index === messages.length - 1 ? lastMessageRef : null} className="flex items-start">
+              <div ref={index === messages.length - 1 ? lastMessageRef : null} className="flex items-start">
                 <Avatar>
                   {/* <AvatarImage alt="Sherlock AI" src="/placeholder-avatar.jpg" /> */}
                   <AvatarFallback>SA</AvatarFallback>
                 </Avatar>
-                <div className="ml-3 bg-white rounded-md p-4 max-w-[70%]">
+                <div className="ml-3 bg-white rounded-md p-4 max-w-[95%] md:max-w-[70%]">
                   <ReactMarkdown className="text-gray-800">{content}</ReactMarkdown>
                 </div>
               </div>
             ) }
-            </>
+            </div>
           )) }
           </>
         ) : (
@@ -133,6 +172,22 @@ export default function Home() {
           value={userInput}
           onChange={e => setUserInput(e.target.value)}
         />
+        { browserSupportsSpeechRecognition && (
+        <Button
+          type="button"
+          className="mr-2"
+          onClick={() => listening ? handleVoiceMessage(transcript) : SpeechRecognition.startListening()}
+        >
+          { listening ? (
+            <svg className="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m3 3 8.735 8.735m0 0a.374.374 0 1 1 .53.53m-.53-.53.53.53m0 0L21 21M14.652 9.348a3.75 3.75 0 0 1 0 5.304m2.121-7.425a6.75 6.75 0 0 1 0 9.546m2.121-11.667c3.808 3.807 3.808 9.98 0 13.788m-9.546-4.242a3.733 3.733 0 0 1-1.06-2.122m-1.061 4.243a6.75 6.75 0 0 1-1.625-6.929m-.496 9.05c-3.068-3.067-3.664-7.67-1.79-11.334M12 12h.008v.008H12V12Z" />
+            </svg>          
+          ) : (
+            <svg className="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
+            </svg>
+          ) }
+        </Button> ) }
         <Button type="submit">Send</Button>
       </form>
 
