@@ -43,9 +43,7 @@ export default function Home() {
     <div className="flex flex-col h-screen">
       
       <header className="bg-gray-900 text-white py-4 px-6 flex items-center">
-        <div className="flex items-center">
-          <span className="text-lg font-medium">Sherlock AI</span>
-        </div>
+        <img src="/logo-dark.png" className="h-8" />
       </header>
 
       <div className="flex-1 bg-gray-100 p-6 overflow-y-auto">

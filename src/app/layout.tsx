@@ -10,7 +10,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
   <ClerkProvider>
-    <html lang="en">
+    <html lang="en" >
+      <head>
+        <link rel="icon" href="/favicon.png" />
+      </head>
       <body>{children}</body>
     </html>
     </ClerkProvider>
