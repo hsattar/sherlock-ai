@@ -1,10 +1,12 @@
 'use client'
 
 import { FormEvent, useEffect, useRef, useState } from "react"
-import { AvatarImage, AvatarFallback, Avatar } from "@/components/ui/avatar"
+import { AvatarFallback, Avatar } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import axios from 'axios'
+import ReactLoading from 'react-loading'
+import ReactMarkdown from 'react-markdown'
 
 export default function Home() {
 
@@ -19,6 +21,10 @@ export default function Home() {
     e.preventDefault()
     if (userInput.trim().length > 0 ) {
 
+      setMessages(prev => [...prev, { role: 'user', content: userInput }])
+      setUserInput('')
+      setResponseLoading(true)
+
       const response = await axios.post('/api/assistant', { threadId, message: { role: 'user', content: userInput.trim() } })
       const threadIdGenerated = response.data.threadId
       setThreadId(threadIdGenerated)
@@ -26,10 +32,7 @@ export default function Home() {
       localStorage.setItem('threadId', threadIdGenerated)
       const messagesToSave = JSON.stringify([...messages, { role: 'user', content: userInput }])
       localStorage.setItem('messages', messagesToSave)
-    
-      setMessages(prev => [...prev, { role: 'user', content: userInput }])
-      setUserInput('')
-      setResponseLoading(true)
+
 
       const intervalId = setInterval(async (): Promise<any> => {
 
@@ -40,8 +43,8 @@ export default function Home() {
             const answer: string = await threadResponse?.data.assistantResponse.text.value
             setResponseLoading(false)
             setMessages(prev => [...prev, { role: 'assistant', content: answer }])
-            
-            const messagesToSave = JSON.stringify([...messages, { role: 'assistant', content: answer }])
+
+            const messagesToSave = JSON.stringify([...messages, { role: 'user', content: userInput }, { role: 'assistant', content: answer }])
             localStorage.setItem('messages', messagesToSave)
         }
 
@@ -80,31 +83,42 @@ export default function Home() {
             { role === 'user' ? (
               <div key={index} ref={index === messages.length - 1 ? lastMessageRef : null} className="flex items-start justify-end">
                 <div className="mr-3 bg-blue-500 text-white rounded-md p-4 max-w-[70%]">
-                  <p>{content}</p>
+                  <ReactMarkdown>{content}</ReactMarkdown>
                 </div>
                 <Avatar>
-                  <AvatarImage alt="Me" src="/placeholder-avatar.jpg" />
+                  {/* <AvatarImage alt="Me" src="/placeholder-avatar.jpg" /> */}
                   <AvatarFallback>ME</AvatarFallback>
                 </Avatar>
               </div>
             ) : (
               <div key={index} ref={index === messages.length - 1 ? lastMessageRef : null} className="flex items-start">
                 <Avatar>
-                  <AvatarImage alt="Sherlock AI" src="/placeholder-avatar.jpg" />
+                  {/* <AvatarImage alt="Sherlock AI" src="/placeholder-avatar.jpg" /> */}
                   <AvatarFallback>SA</AvatarFallback>
                 </Avatar>
                 <div className="ml-3 bg-white rounded-md p-4 max-w-[70%]">
-                  <p className="text-gray-800">{content}</p>
+                  <ReactMarkdown className="text-gray-800">{content}</ReactMarkdown>
                 </div>
               </div>
             ) }
-            { responseLoading && <p>Loading...</p> }
             </>
           )) }
           </>
         ) : (
           <div className="flex flex-grow justify-center items-center h-[75vh] lg:h-[80vh]">
-            { loading ? <span className="loading loading-dots loading-lg"></span> : <p className="text-center text-3xl select-none">Hello, I&apos;m Sherlock AI. How can I help you today?</p> }
+            { loading ? <ReactLoading type="bubbles" color="#111827" /> : <p className="text-center text-3xl select-none">Hello, I&apos;m Sherlock AI. How can I help you today?</p> }
+          </div>
+        ) }
+
+        { responseLoading && (
+          <div className="flex items-start">
+            <Avatar>
+              {/* <AvatarImage alt="Sherlock AI" src="/placeholder-avatar.jpg" /> */}
+              <AvatarFallback>SA</AvatarFallback>
+            </Avatar>
+            <div className="ml-3 bg-white rounded-md px-4 py-1 max-w-[70%]">
+              <ReactLoading type="bubbles" color="#111827" />
+            </div>
           </div>
         ) }
 
