@@ -1,7 +1,7 @@
 'use client'
 
-import { FormEvent, useEffect, useRef, useState } from "react"
 import "regenerator-runtime/runtime.js"
+import { FormEvent, useEffect, useRef, useState } from "react"
 import { AvatarFallback, Avatar } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -12,9 +12,10 @@ import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognitio
 
 export default function Home() {
 
-  const { transcript, listening, browserSupportsSpeechRecognition } = useSpeechRecognition()
+  const { transcript, resetTranscript, listening, browserSupportsSpeechRecognition } = useSpeechRecognition()
 
   const lastMessageRef = useRef<HTMLDivElement>(null)
+  const voiceMessageRef = useRef<HTMLDivElement>(null)
   const [userInput, setUserInput] = useState('')
   const [messages, setMessages] = useState<IMessage[]>([])
   const [threadId, setThreadId] = useState('')
@@ -59,6 +60,7 @@ export default function Home() {
 
   const handleVoiceMessage = async (message: string) => {
     SpeechRecognition.stopListening()
+    resetTranscript()
     if (message.trim().length > 0 ) {
 
       setMessages(prev => [...prev, { role: 'user', content: message }])
@@ -105,9 +107,12 @@ export default function Home() {
     lastMessageRef.current && lastMessageRef.current.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  useEffect(() => {
+    voiceMessageRef.current && voiceMessageRef.current.scrollIntoView({ behavior: 'smooth' })
+  }, [listening])
+
   return (
     <div className="flex flex-col h-screen">
-      
       <header className="bg-gray-900 text-white py-4 px-6 flex items-center">
         <img src="/logo-dark.png" className="h-8" />
       </header>
@@ -121,7 +126,7 @@ export default function Home() {
             <div key={index}>
             { role === 'user' ? (
               <div ref={index === messages.length - 1 ? lastMessageRef : null} className="flex items-start justify-end">
-                <div className="mr-3 bg-blue-500 text-white rounded-md p-4 max-w-[95%] md:max-w-[70%]">
+                <div className="mr-1 bg-blue-500 text-white rounded-md p-4 max-w-[95%] md:max-w-[70%]">
                   <ReactMarkdown>{content}</ReactMarkdown>
                 </div>
                 <Avatar>
@@ -135,7 +140,7 @@ export default function Home() {
                   {/* <AvatarImage alt="Sherlock AI" src="/placeholder-avatar.jpg" /> */}
                   <AvatarFallback>SA</AvatarFallback>
                 </Avatar>
-                <div className="ml-3 bg-white rounded-md p-4 max-w-[95%] md:max-w-[70%]">
+                <div className="ml-1 bg-white rounded-md p-4 max-w-[95%] md:max-w-[70%]">
                   <ReactMarkdown className="text-gray-800">{content}</ReactMarkdown>
                 </div>
               </div>
@@ -144,7 +149,7 @@ export default function Home() {
           )) }
           </>
         ) : (
-          <div className="flex flex-grow justify-center items-center h-[75vh] lg:h-[80vh]">
+          <div className="flex flex-grow justify-center items-center h-[65vh] lg:h-[80vh]">
             { loading ? <ReactLoading type="bubbles" color="#111827" /> : <p className="text-center text-3xl select-none">Hello, I&apos;m Sherlock AI. How can I help you today?</p> }
           </div>
         ) }
@@ -155,16 +160,29 @@ export default function Home() {
               {/* <AvatarImage alt="Sherlock AI" src="/placeholder-avatar.jpg" /> */}
               <AvatarFallback>SA</AvatarFallback>
             </Avatar>
-            <div className="ml-3 bg-white rounded-md px-4 py-1 max-w-[70%]">
+            <div className="ml-1 bg-white rounded-md px-4 py-1 max-w-[70%]">
               <ReactLoading type="bubbles" color="#111827" />
             </div>
           </div>
         ) }
 
+        { listening && <div ref={voiceMessageRef} className="flex flex-col divide-y items-center justify-center max-w-[50%] bg-white rounded-lg pt-4 text-gray-800 mx-auto">
+          <div className="flex flex-col justify-center items-center">
+            <svg className="w-28 h-28" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
+            </svg>
+            <p className="mt-6 w-full text-center px-4">{transcript.length === 0 ? 'Speak now...' : transcript}</p>
+          </div>
+          <div className="flex justify-center mt-6 divide-x w-full">
+            <Button variant="link" className="text-red-500 text-center w-full" onClick={() => { SpeechRecognition.abortListening(); resetTranscript() }}>Cancel</Button>
+            <Button variant="link" className="text-center w-full" onClick={() => handleVoiceMessage(transcript)}>Send</Button>
+          </div>
+        </div> }
+
         </div>
       </div>
 
-      <form onSubmit={handleSendMessage} className="bg-gray-100 p-4 flex items-center">
+      { !listening && <form onSubmit={handleSendMessage} className="bg-gray-100 p-4 flex items-center">
         <Input
           type="text"
           placeholder="Ask me something..."
@@ -172,11 +190,12 @@ export default function Home() {
           value={userInput}
           onChange={e => setUserInput(e.target.value)}
         />
-        { browserSupportsSpeechRecognition && (
+        {/* { browserSupportsSpeechRecognition && ( */}
+        { true && (
         <Button
           type="button"
           className="mr-2"
-          onClick={() => listening ? handleVoiceMessage(transcript) : SpeechRecognition.startListening()}
+          onClick={() => listening ? handleVoiceMessage(transcript) : SpeechRecognition.startListening({ continuous: true })}
         >
           { listening ? (
             <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -193,7 +212,7 @@ export default function Home() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
         </svg>
         </Button>
-      </form>
+      </form> }
 
     </div>
   )
