@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useEffect, useRef, useState } from "react"
-import regeneratorRuntime from "regenerator-runtime"
+// import "regenerator-runtime/runtime.js"
 import { AvatarFallback, Avatar } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -172,7 +172,8 @@ export default function Home() {
           value={userInput}
           onChange={e => setUserInput(e.target.value)}
         />
-        { browserSupportsSpeechRecognition && (
+        {/* { browserSupportsSpeechRecognition && ( */}
+        { true && (
         <Button
           type="button"
           className="mr-2"
