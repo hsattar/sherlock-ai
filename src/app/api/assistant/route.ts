@@ -7,14 +7,22 @@ export async function POST(req: Request) {
 
     const openai = new OpenAI({ apiKey: OPEN_AI_API_KEY })
 
-    const data = await req.json()
+    const body = await req.json()
 
-    console.log(data)
-		
+    let threadId = ''
 
-    return NextResponse.json({ threadId: '456' })
-}
+    if (!body?.threadID) {
+        const thread = await openai.beta.threads.create()
+        threadId = thread.id
+    }
 
-export async function GET(req: Request) {
-    return Response.json({ threadId: '456' })
+    if (body?.threadId) {
+        threadId = body.threadId	
+    }
+
+    const message = await openai.beta.threads.messages.create(threadId, body.message)
+
+    const run = await openai.beta.threads.runs.create(threadId, { assistant_id: SHERLOCK_ASSISTANT_ID! })
+
+    return NextResponse.json({ threadId, runId: run.id })
 }

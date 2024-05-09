@@ -13,17 +13,40 @@ export default function Home() {
   const [messages, setMessages] = useState<IMessage[]>([])
   const [threadId, setThreadId] = useState('')
   const [loading, setLoading] = useState(true)
+  const [responseLoading, setResponseLoading] = useState(false)
 
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault()
     if (userInput.trim().length > 0 ) {
-      const response = await axios.post('/api/assistant', { threadId })
+
+      const response = await axios.post('/api/assistant', { threadId, message: { role: 'user', content: userInput.trim() } })
       const threadIdGenerated = response.data.threadId
+      setThreadId(threadIdGenerated)
+    
       localStorage.setItem('threadId', threadIdGenerated)
       const messagesToSave = JSON.stringify([...messages, { role: 'user', content: userInput }])
       localStorage.setItem('messages', messagesToSave)
+    
       setMessages(prev => [...prev, { role: 'user', content: userInput }])
       setUserInput('')
+      setResponseLoading(true)
+
+      const intervalId = setInterval(async (): Promise<any> => {
+
+        const threadResponse = await axios.post(`/api/assistant-status`, { threadId: response?.data.threadId, runId: response?.data.runId })
+
+        if (threadResponse?.status === 200) {
+            clearInterval(intervalId)
+            const answer: string = await threadResponse?.data.assistantResponse.text.value
+            setResponseLoading(false)
+            setMessages(prev => [...prev, { role: 'assistant', content: answer }])
+            
+            const messagesToSave = JSON.stringify([...messages, { role: 'assistant', content: answer }])
+            localStorage.setItem('messages', messagesToSave)
+        }
+
+      }, 2000)
+    
     }
   }
 
@@ -75,6 +98,7 @@ export default function Home() {
                 </div>
               </div>
             ) }
+            { responseLoading && <p>Loading...</p> }
             </>
           )) }
           </>
@@ -103,6 +127,6 @@ export default function Home() {
 }
 
 interface IMessage {
-  role: 'user' | 'ai'
+  role: 'user' | 'assistant'
   content: string
 }
