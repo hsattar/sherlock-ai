@@ -172,8 +172,7 @@ export default function Home() {
           value={userInput}
           onChange={e => setUserInput(e.target.value)}
         />
-        {/* { browserSupportsSpeechRecognition && ( */}
-        { true && (
+        { browserSupportsSpeechRecognition && (
         <Button
           type="button"
           className="mr-2"
